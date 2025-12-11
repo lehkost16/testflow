@@ -1,4 +1,4 @@
-# TestFlow - 企业级模块化测试协作平台
+# TestFlow - 企业级模块化测试用例协作平台
 
 <div align="center">
 

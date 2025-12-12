@@ -1,10 +1,10 @@
-# TestFlow - 企业级模块化测试协作平台
+# TestFlow - 企业级模块化测试用例协作平台
 
 <div align="center">
 
 <img src="frontend/logo.svg" alt="TestFlow Logo" width="200" />
 
-[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
 ![Vue](https://img.shields.io/badge/Vue.js-3.x-green.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.68+-009688.svg)
@@ -192,13 +192,15 @@ docker-compose up -d --build
 
 ## 📄 许可证
 
-本项目采用 **[CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)** (署名-非商业性使用 4.0 国际) 许可证。
+## 📄 开源协议
 
-❌ **禁止用于商业用途**：您不得将本项目或其衍生作品用于商业目的（如销售、付费服务等）。
-✅ **允许个人学习与研究**：您可以自由下载、修改和使用本项目用于学习、研究或非营利性项目。
-✅ **署名**：在使用或分发时，必须保留原作者署名。
+本项目采用 **Apache 2.0** 协议开源。
 
-如果您需要将本项目用于商业用途，请联系作者获取商业授权。
+*   ✅ **完全免费**：无论是个人开发者还是企业团队，均可免费用于商业或非商业项目。
+*   ✅ **二次开发**：允许您基于代码进行修改、分发或集成。
+*   ℹ️ **唯一限制**：在分发或衍生产品中，必须保留原始协议声明与作者署名。
+
+我们相信开源的力量。如果您觉得 TestFlow 对您有帮助，请在 GitHub 上点一颗 ⭐ Star 支持我们！
 
 ---
 
@@ -215,5 +217,9 @@ docker-compose up -d --build
 ---
 
 <div align="center">
-Made with ❤️ by TestFlow Team
+
+**⭐ 如果这个项目对你有帮助，请给个Star支持一下！**
+
+Made with ❤️ by [Ggbond626](https://github.com/Ggbond626)
+
 </div>

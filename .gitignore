@@ -118,3 +118,10 @@ backend/tests/
 # Optimized prompts (optional)
 # ========================================
 backend/app/prompts_optimized.py
+
+# ========================================
+# Test automation learning project
+# ========================================
+test/
+
+1/

@@ -491,10 +491,10 @@ async def export_test_cases(
     if request.format == "xmind":
         return export_to_xmind(project, modules, test_cases, tp_rp_map, rp_module_map)
     else:
-        return export_to_excel(project, modules, test_cases, tp_rp_map, rp_module_map, module_map)
+        return export_to_excel(project, modules, test_cases, tp_rp_map, rp_module_map, module_map, db)
 
 
-def export_to_excel(project, modules, test_cases, tp_rp_map, rp_module_map, module_map):
+def export_to_excel(project, modules, test_cases, tp_rp_map, rp_module_map, module_map, db: Session):
     """导出到Excel"""
     from fastapi.responses import StreamingResponse
     from openpyxl import Workbook

@@ -156,14 +156,14 @@
                       <!-- 测试步骤 -->
                       <div class="flex-1 pr-4 border-r border-gray-100">
                         <div v-for="(step, idx) in (expandedRows.has(row.id) ? row.test_steps : row.test_steps.slice(0, 2))" :key="idx" class="text-xs text-gray-600 flex gap-2 mb-1">
-                          <span class="text-gray-400 select-none">{{ idx + 1 }}.</span>
+                          <span class="text-gray-400 select-none">{{ Number(idx) + 1 }}.</span>
                           <div class="flex-1 break-words">{{ step.action }}</div>
                         </div>
                       </div>
                       <!-- 预期结果 -->
                       <div class="flex-1 pl-4">
                         <div v-for="(step, idx) in (expandedRows.has(row.id) ? row.test_steps : row.test_steps.slice(0, 2))" :key="idx" class="text-xs text-gray-600 flex gap-2 mb-1">
-                          <span class="text-gray-400 select-none">{{ idx + 1 }}.</span>
+                          <span class="text-gray-400 select-none">{{ Number(idx) + 1 }}.</span>
                           <div class="flex-1 break-words">{{ step.expected }}</div>
                         </div>
                       </div>
@@ -630,6 +630,8 @@ async function loadData() {
       }))
       // 过滤空模块（未分类除外）
       modules.value = modules.value.filter((m: any) => m.test_cases.length > 0 || m.id === 0)
+      // 计算总用例数
+      total.value = modules.value.reduce((sum: number, m: any) => sum + (m.test_cases?.length || 0), 0)
     } else {
       // 扁平视图
       flatData.value = data
@@ -736,7 +738,7 @@ async function handleExport(command: string) {
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
     
-    const count = idsToExport ? idsToExport.length : '全部'
+    const count = idsToExport ? idsToExport.length : total.value
     const formatName = command === 'xmind' ? '思维导图' : 'Excel'
     ElMessage.success(`导出${formatName}成功，共 ${count} 条用例`)
   } catch (error: any) {

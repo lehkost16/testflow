@@ -357,7 +357,7 @@
           <div class="space-y-2">
             <div v-for="(step, index) in viewingTestCase.test_steps" :key="index" class="bg-gray-50 rounded-lg p-3">
               <div class="flex gap-2">
-                <span class="text-gray-500 font-medium">{{ step.step || index + 1 }}.</span>
+                <span class="text-gray-500 font-medium">{{ Number(step.step) || (Number(index) + 1) }}.</span>
                 <div>
                   <p class="text-gray-800">{{ step.action }}</p>
                   <p v-if="step.expected" class="text-gray-500 text-sm mt-1">预期：{{ step.expected }}</p>

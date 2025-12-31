@@ -93,53 +93,53 @@ export interface ProjectStatsResponse {
 export const moduleApi = {
   // 获取项目统计信息
   getProjectStats: (projectId: number): Promise<ProjectStatsResponse> => {
-    return api.get(`/api/projects/${projectId}/stats`)
+    return api.get(`/projects/${projectId}/stats`)
   },
 
   // 获取模块列表
   getModules: (projectId: number, priority?: ModulePriority): Promise<ModuleListResponse> => {
     const params = priority ? { priority } : undefined
-    return api.get(`/api/projects/${projectId}/modules`, { params })
+    return api.get(`/projects/${projectId}/modules`, { params })
   },
 
   // 创建模块
   createModule: (projectId: number, data: ModuleCreateRequest): Promise<ModuleDetail> => {
-    return api.post(`/api/projects/${projectId}/modules`, data)
+    return api.post(`/projects/${projectId}/modules`, data)
   },
 
   // 获取模块详情
   getModule: (projectId: number, moduleId: number): Promise<ModuleDetail> => {
-    return api.get(`/api/projects/${projectId}/modules/${moduleId}`)
+    return api.get(`/projects/${projectId}/modules/${moduleId}`)
   },
 
   // 更新模块
   updateModule: (projectId: number, moduleId: number, data: ModuleUpdateRequest): Promise<ModuleDetail> => {
-    return api.put(`/api/projects/${projectId}/modules/${moduleId}`, data)
+    return api.put(`/projects/${projectId}/modules/${moduleId}`, data)
   },
 
   // 删除模块
   deleteModule: (projectId: number, moduleId: number): Promise<void> => {
-    return api.delete(`/api/projects/${projectId}/modules/${moduleId}`)
+    return api.delete(`/projects/${projectId}/modules/${moduleId}`)
   },
 
   // 调整模块顺序
   reorderModules: (projectId: number, data: ModuleReorderRequest): Promise<{ success: boolean; message: string }> => {
-    return api.put(`/api/projects/${projectId}/modules/reorder`, data)
+    return api.put(`/projects/${projectId}/modules/reorder`, data)
   },
 
   // 分配模块负责人
   assignModule: (projectId: number, moduleId: number, data: ModuleAssignmentCreateRequest): Promise<ModuleAssignee> => {
-    return api.post(`/api/projects/${projectId}/modules/${moduleId}/assign`, data)
+    return api.post(`/projects/${projectId}/modules/${moduleId}/assign`, data)
   },
 
   // 移除模块负责人
   removeAssignment: (projectId: number, moduleId: number, userId: number): Promise<void> => {
-    return api.delete(`/api/projects/${projectId}/modules/${moduleId}/assign/${userId}`)
+    return api.delete(`/projects/${projectId}/modules/${moduleId}/assign/${userId}`)
   },
 
   // 获取模块负责人列表
   getModuleAssignees: (projectId: number, moduleId: number): Promise<ModuleAssignee[]> => {
-    return api.get(`/api/projects/${projectId}/modules/${moduleId}/assignees`)
+    return api.get(`/projects/${projectId}/modules/${moduleId}/assignees`)
   }
 }
 

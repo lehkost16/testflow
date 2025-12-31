@@ -170,12 +170,12 @@ const loadData = async () => {
     projectStats.value.total_projects = projectStore.total
     
     // 加载系统健康状态
-    const healthData = await api.get('/api/system/health')
+    const healthData = await api.get('/system/health')
     systemHealth.value = healthData as any
     
     // 加载测试数据统计
     try {
-      const statsData = await api.get('/api/test-data/stats') as any
+      const statsData = await api.get('/test-data/stats') as any
       if (statsData) {
         systemStats.value.test_cases = statsData.total_test_cases || 0
         systemStats.value.weekly_new = statsData.weekly_new || 0

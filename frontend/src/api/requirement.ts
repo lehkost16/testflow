@@ -92,7 +92,7 @@ export const requirementApi = {
 
   // 获取模块的需求点列表
   getModuleRequirementPoints: (projectId: number, moduleId: number): Promise<RequirementPoint[]> => {
-    return api.get(`/api/projects/${projectId}/modules/${moduleId}/requirement-points`)
+    return api.get(`/projects/${projectId}/modules/${moduleId}/requirement-points`)
   },
 
   // 创建需求点
@@ -101,7 +101,7 @@ export const requirementApi = {
     moduleId: number,
     data: { content: string; priority?: string }
   ): Promise<RequirementPoint> => {
-    return api.post(`/api/projects/${projectId}/modules/${moduleId}/requirement-points`, null, {
+    return api.post(`/projects/${projectId}/modules/${moduleId}/requirement-points`, null, {
       params: data
     })
   },
@@ -113,14 +113,14 @@ export const requirementApi = {
     pointId: number,
     data: { content: string; priority?: string }
   ): Promise<RequirementPoint> => {
-    return api.put(`/api/projects/${projectId}/modules/${moduleId}/requirement-points/${pointId}`, null, {
+    return api.put(`/projects/${projectId}/modules/${moduleId}/requirement-points/${pointId}`, null, {
       params: data
     })
   },
 
   // 删除需求点
   deleteModuleRequirementPoint: (projectId: number, moduleId: number, pointId: number): Promise<{ message: string }> => {
-    return api.delete(`/api/projects/${projectId}/modules/${moduleId}/requirement-points/${pointId}`)
+    return api.delete(`/projects/${projectId}/modules/${moduleId}/requirement-points/${pointId}`)
   },
 
   // ========== 按模块管理测试点 ==========
@@ -145,7 +145,7 @@ export const requirementApi = {
       total_test_points: number
     }
   }> => {
-    return api.get(`/api/projects/${projectId}/modules/${moduleId}/test-points`)
+    return api.get(`/projects/${projectId}/modules/${moduleId}/test-points`)
   },
 
   // 创建测试点
@@ -154,7 +154,7 @@ export const requirementApi = {
     moduleId: number,
     data: { content: string; requirement_point_id: number; test_type?: string; priority?: string }
   ): Promise<any> => {
-    return api.post(`/api/projects/${projectId}/modules/${moduleId}/test-points`, null, {
+    return api.post(`/projects/${projectId}/modules/${moduleId}/test-points`, null, {
       params: data
     })
   },
@@ -172,7 +172,7 @@ export const requirementApi = {
     }>,
     clearExisting: boolean = false
   ): Promise<{ success: boolean; created_count: number; deleted_count?: number; points: any[] }> => {
-    return api.post(`/api/projects/${projectId}/modules/${moduleId}/test-points/batch`, {
+    return api.post(`/projects/${projectId}/modules/${moduleId}/test-points/batch`, {
       points,
       clear_existing: clearExisting
     })
@@ -185,14 +185,14 @@ export const requirementApi = {
     pointId: number,
     data: { content: string; test_type?: string; priority?: string }
   ): Promise<any> => {
-    return api.put(`/api/projects/${projectId}/modules/${moduleId}/test-points/${pointId}`, null, {
+    return api.put(`/projects/${projectId}/modules/${moduleId}/test-points/${pointId}`, null, {
       params: data
     })
   },
 
   // 删除测试点
   deleteModuleTestPoint: (projectId: number, moduleId: number, pointId: number): Promise<{ message: string }> => {
-    return api.delete(`/api/projects/${projectId}/modules/${moduleId}/test-points/${pointId}`)
+    return api.delete(`/projects/${projectId}/modules/${moduleId}/test-points/${pointId}`)
   },
 
   // ========== 按模块管理测试用例 ==========
@@ -226,7 +226,7 @@ export const requirementApi = {
     total_test_points: number
     total_test_cases: number
   }> => {
-    return api.get(`/api/projects/${projectId}/modules/${moduleId}/test-cases`)
+    return api.get(`/projects/${projectId}/modules/${moduleId}/test-cases`)
   },
 
   // 创建测试用例
@@ -245,7 +245,7 @@ export const requirementApi = {
       created_by_ai?: boolean
     }
   ): Promise<any> => {
-    return api.post(`/api/projects/${projectId}/modules/${moduleId}/test-cases`, data)
+    return api.post(`/projects/${projectId}/modules/${moduleId}/test-cases`, data)
   },
 
   // 更新测试用例
@@ -263,12 +263,12 @@ export const requirementApi = {
       status?: string
     }
   ): Promise<any> => {
-    return api.put(`/api/projects/${projectId}/modules/${moduleId}/test-cases/${caseId}`, data)
+    return api.put(`/projects/${projectId}/modules/${moduleId}/test-cases/${caseId}`, data)
   },
 
   // 删除测试用例
   deleteModuleTestCase: (projectId: number, moduleId: number, caseId: number): Promise<{ message: string }> => {
-    return api.delete(`/api/projects/${projectId}/modules/${moduleId}/test-cases/${caseId}`)
+    return api.delete(`/projects/${projectId}/modules/${moduleId}/test-cases/${caseId}`)
   },
 
   // 批量创建测试用例
@@ -287,7 +287,7 @@ export const requirementApi = {
     }>,
     clearExisting: boolean = false
   ): Promise<{ success: boolean; created_count: number; deleted_count?: number; test_cases: any[] }> => {
-    return api.post(`/api/projects/${projectId}/modules/${moduleId}/test-cases/batch`, {
+    return api.post(`/projects/${projectId}/modules/${moduleId}/test-cases/batch`, {
       test_cases: testCases,
       clear_existing: clearExisting
     })

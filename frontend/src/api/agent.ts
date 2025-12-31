@@ -75,35 +75,35 @@ export const agentApi = {
    * 需求分析
    */
   analyzeRequirements(data: RequirementAnalysisRequest): Promise<AgentTaskResponse> {
-    return request.post('/api/agents/requirement-analysis', data, { timeout: AI_TIMEOUT })
+    return request.post('/agents/requirement-analysis', data, { timeout: AI_TIMEOUT })
   },
 
   /**
    * 生成测试点（同步模式）
    */
   generateTestPoints(data: TestPointGenerationRequest): Promise<AgentTaskResponse> {
-    return request.post('/api/agents/test-point-generation', data, { timeout: AI_TIMEOUT })
+    return request.post('/agents/test-point-generation', data, { timeout: AI_TIMEOUT })
   },
 
   /**
    * 异步生成测试点（适用于大量需求点）
    */
   generateTestPointsAsync(data: TestPointGenerationRequest): Promise<AsyncTaskResponse> {
-    return request.post('/api/agents/test-point-generation/async', data)
+    return request.post('/agents/test-point-generation/async', data)
   },
 
   /**
    * 获取异步任务状态
    */
   getTaskStatus(taskId: string): Promise<AsyncTaskStatusResponse> {
-    return request.get(`/api/agents/tasks/${taskId}/status`)
+    return request.get(`/agents/tasks/${taskId}/status`)
   },
 
   /**
    * 取消异步任务
    */
   cancelTask(taskId: string): Promise<{ success: boolean; message: string }> {
-    return request.post(`/api/agents/tasks/${taskId}/cancel`)
+    return request.post(`/agents/tasks/${taskId}/cancel`)
   },
 
   /**
@@ -115,14 +115,14 @@ export const agentApi = {
     clear_existing?: boolean
     agent_id?: number
   }): Promise<AsyncTaskResponse> {
-    return request.post('/api/agents/test-case-design/async', data)
+    return request.post('/agents/test-case-design/async', data)
   },
 
   /**
    * 优化测试用例
    */
   optimizeTestCases(data: TestCaseOptimizationRequest): Promise<AgentTaskResponse> {
-    return request.post('/api/agents/test-case-optimization', data, { timeout: AI_TIMEOUT })
+    return request.post('/agents/test-case-optimization', data, { timeout: AI_TIMEOUT })
   },
 
   /**
@@ -136,50 +136,50 @@ export const agentApi = {
     auto_save?: boolean
     agent_id?: number
   }): Promise<AsyncTaskResponse> {
-    return request.post('/api/agents/test-case-optimization/batch', data)
+    return request.post('/agents/test-case-optimization/batch', data)
   },
 
   /**
    * 获取智能体列表
    */
   getAgentList(): Promise<AgentListResponse> {
-    return request.get('/api/agents/list')
+    return request.get('/agents/list')
   },
 
   /**
    * 获取任务执行日志
    */
   getTaskLogs(params?: { agent_id?: number; limit?: number }): Promise<TaskLogResponse> {
-    return request.get('/api/agents/task-logs', { params })
+    return request.get('/agents/task-logs', { params })
   },
 
   /**
    * 获取智能体类型列表
    */
   getAgentTypes(): Promise<{ agent_types: any[] }> {
-    return request.get('/api/agents/types')
+    return request.get('/agents/types')
   },
 
   /**
    * 获取测试类型列表（从系统设置加载启用的测试分类）
    */
   getTestTypes(): Promise<{ test_types: any[] }> {
-    return request.get('/api/agents/test-types')
+    return request.get('/agents/test-types')
   },
 
   /**
    * 获取测试设计方法列表（从系统设置加载启用的设计方法）
    */
   getDesignMethods(): Promise<{ design_methods: any[] }> {
-    return request.get('/api/agents/design-methods')
+    return request.get('/agents/design-methods')
   },
 
   /**
    * 获取测试类别列表（从系统设置加载启用的测试分类）
    */
   getTestCategories(): Promise<{ test_categories: any[] }> {
-    return request.get('/api/agents/test-types')
-      .then(response => ({
+    return request.get('/agents/test-types')
+      .then((response: any) => ({
         test_categories: response.test_types.map((t: any) => ({
           code: t.value,
           name: t.label

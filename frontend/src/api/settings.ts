@@ -16,7 +16,7 @@ export interface TestCategoryBase {
 }
 
 /** 测试分类创建请求 */
-export interface TestCategoryCreate extends TestCategoryBase {}
+export interface TestCategoryCreate extends TestCategoryBase { }
 
 /** 测试分类更新请求 */
 export interface TestCategoryUpdate {
@@ -47,7 +47,7 @@ export interface TestDesignMethodBase {
 }
 
 /** 测试设计方法创建请求 */
-export interface TestDesignMethodCreate extends TestDesignMethodBase {}
+export interface TestDesignMethodCreate extends TestDesignMethodBase { }
 
 /** 测试设计方法更新请求 */
 export interface TestDesignMethodUpdate {
@@ -97,7 +97,7 @@ export const settingsApi = {
    * @param activeOnly 是否只返回启用的分类
    */
   getTestCategories: (activeOnly: boolean = false): Promise<TestCategoryResponse[]> => {
-    return api.get('/api/settings/test-categories', { params: { active_only: activeOnly } })
+    return api.get('/settings/test-categories', { params: { active_only: activeOnly } })
   },
 
   /**
@@ -105,7 +105,7 @@ export const settingsApi = {
    * @param data 测试分类创建数据
    */
   createTestCategory: (data: TestCategoryCreate): Promise<TestCategoryResponse> => {
-    return api.post('/api/settings/test-categories', data)
+    return api.post('/settings/test-categories', data)
   },
 
   /**
@@ -114,7 +114,7 @@ export const settingsApi = {
    * @param data 更新数据
    */
   updateTestCategory: (id: number, data: TestCategoryUpdate): Promise<TestCategoryResponse> => {
-    return api.put(`/api/settings/test-categories/${id}`, data)
+    return api.put(`/settings/test-categories/${id}`, data)
   },
 
   /**
@@ -122,14 +122,14 @@ export const settingsApi = {
    * @param id 分类ID
    */
   deleteTestCategory: (id: number): Promise<DeleteResponse> => {
-    return api.delete(`/api/settings/test-categories/${id}`)
+    return api.delete(`/settings/test-categories/${id}`)
   },
 
   /**
    * 重置测试分类为默认值
    */
   resetTestCategories: (): Promise<TestCategoryResponse[]> => {
-    return api.post('/api/settings/test-categories/reset')
+    return api.post('/settings/test-categories/reset')
   },
 
   // ============== Test Design Methods ==============
@@ -139,7 +139,7 @@ export const settingsApi = {
    * @param activeOnly 是否只返回启用的方法
    */
   getDesignMethods: (activeOnly: boolean = false): Promise<TestDesignMethodResponse[]> => {
-    return api.get('/api/settings/design-methods', { params: { active_only: activeOnly } })
+    return api.get('/settings/design-methods', { params: { active_only: activeOnly } })
   },
 
   /**
@@ -147,7 +147,7 @@ export const settingsApi = {
    * @param data 测试设计方法创建数据
    */
   createDesignMethod: (data: TestDesignMethodCreate): Promise<TestDesignMethodResponse> => {
-    return api.post('/api/settings/design-methods', data)
+    return api.post('/settings/design-methods', data)
   },
 
   /**
@@ -156,7 +156,7 @@ export const settingsApi = {
    * @param data 更新数据
    */
   updateDesignMethod: (id: number, data: TestDesignMethodUpdate): Promise<TestDesignMethodResponse> => {
-    return api.put(`/api/settings/design-methods/${id}`, data)
+    return api.put(`/settings/design-methods/${id}`, data)
   },
 
   /**
@@ -164,14 +164,14 @@ export const settingsApi = {
    * @param id 方法ID
    */
   deleteDesignMethod: (id: number): Promise<DeleteResponse> => {
-    return api.delete(`/api/settings/design-methods/${id}`)
+    return api.delete(`/settings/design-methods/${id}`)
   },
 
   /**
    * 重置测试设计方法为默认值
    */
   resetDesignMethods: (): Promise<TestDesignMethodResponse[]> => {
-    return api.post('/api/settings/design-methods/reset')
+    return api.post('/settings/design-methods/reset')
   },
 
   // ============== Concurrency Config ==============
@@ -180,7 +180,7 @@ export const settingsApi = {
    * 获取并发配置
    */
   getConcurrencyConfig: (): Promise<ConcurrencyConfig> => {
-    return api.get('/api/settings/concurrency')
+    return api.get('/settings/concurrency')
   },
 
   /**
@@ -188,7 +188,7 @@ export const settingsApi = {
    * @param config 新的并发配置
    */
   updateConcurrencyConfig: (config: ConcurrencyConfig): Promise<ConcurrencyConfig> => {
-    return api.put('/api/settings/concurrency', config)
+    return api.put('/settings/concurrency', config)
   }
 }
 

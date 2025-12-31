@@ -225,7 +225,7 @@ const refreshAgents = async () => {
     }
     
     // 使用统一的API实例获取智能体列表
-    const data = await api.get('/api/ai/agents') as any[]
+    const data = await api.get('/ai/agents') as any[]
     agents.value = Array.isArray(data) ? data : []
   } catch (error: any) {
     console.error('获取智能体列表失败:', error)
@@ -256,7 +256,7 @@ const saveAgent = async () => {
   saving.value = true
   try {
     // 使用统一的API实例更新智能体配置
-    await api.put(`/api/ai/agents/${editingAgent.value.id}`, {
+    await api.put(`/ai/agents/${editingAgent.value.id}`, {
       ai_model_id: agentForm.value.ai_model_id,
       temperature: agentForm.value.temperature,
       max_tokens: agentForm.value.max_tokens,

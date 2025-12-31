@@ -81,14 +81,14 @@ export const testDataApi = {
     const params: Record<string, number> = {}
     if (options?.fileId) params.file_id = options.fileId
     if (options?.moduleId) params.module_id = options.moduleId
-    return api.get(`/api/test-data/projects/${projectId}/test-hierarchy`, { params })
+    return api.get(`/test-data/projects/${projectId}/test-hierarchy`, { params })
   },
 
   /**
    * 更新需求点
    */
   updateRequirementPoint: (pointId: number, content: string): Promise<RequirementPoint> => {
-    return api.put(`/api/test-data/requirement-points/${pointId}`, { content })
+    return api.put(`/test-data/requirement-points/${pointId}`, { content })
   },
 
   /**
@@ -102,35 +102,35 @@ export const testDataApi = {
       priority?: string
     }
   ): Promise<TestPoint> => {
-    return api.put(`/api/test-data/test-points/${pointId}`, data)
+    return api.put(`/test-data/test-points/${pointId}`, data)
   },
 
   /**
    * 更新测试用例
    */
   updateTestCase: (caseId: number, data: Partial<TestCase>): Promise<TestCase> => {
-    return api.put(`/api/test-data/test-cases/${caseId}`, data)
+    return api.put(`/test-data/test-cases/${caseId}`, data)
   },
 
   /**
    * 删除需求点
    */
   deleteRequirementPoint: (pointId: number): Promise<void> => {
-    return api.delete(`/api/test-data/requirement-points/${pointId}`)
+    return api.delete(`/test-data/requirement-points/${pointId}`)
   },
 
   /**
    * 删除测试点
    */
   deleteTestPoint: (pointId: number): Promise<void> => {
-    return api.delete(`/api/test-data/test-points/${pointId}`)
+    return api.delete(`/test-data/test-points/${pointId}`)
   },
 
   /**
    * 删除测试用例
    */
   deleteTestCase: (caseId: number): Promise<void> => {
-    return api.delete(`/api/test-data/test-cases/${caseId}`)
+    return api.delete(`/test-data/test-cases/${caseId}`)
   }
 }
 

@@ -255,7 +255,7 @@ const loadDocuments = async () => {
   loading.value = true
   try {
     // 使用模块级API路径，api实例会自动添加baseURL和认证token
-    const response = await api.get(`/api/projects/${props.projectId}/modules/${props.moduleId}/requirements/files`)
+    const response = await api.get(`/projects/${props.projectId}/modules/${props.moduleId}/requirements/files`)
     documents.value = response as any
   } catch (error: any) {
     console.error('加载文档列表失败:', error)
@@ -286,7 +286,7 @@ const handleUpload = async () => {
 
   try {
     // 使用模块级API路径，api实例会自动添加baseURL和认证token
-    await api.post(`/api/projects/${props.projectId}/modules/${props.moduleId}/requirements/files`, formData, {
+    await api.post(`/projects/${props.projectId}/modules/${props.moduleId}/requirements/files`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     ElMessage.success('文档上传成功')
@@ -316,7 +316,7 @@ const deleteDocument = async (docId: number) => {
     )
 
     // 使用模块级API路径，api实例会自动添加baseURL和认证token
-    await api.delete(`/api/projects/${props.projectId}/modules/${props.moduleId}/requirements/files/${docId}`)
+    await api.delete(`/projects/${props.projectId}/modules/${props.moduleId}/requirements/files/${docId}`)
     ElMessage.success('文档删除成功')
     loadDocuments()
   } catch (error: any) {
@@ -351,7 +351,7 @@ const generateRequirementPoints = async (doc: RequirementDoc) => {
 
   // 先获取文档内容（包含图片信息）
   try {
-    const response = await api.get(`/api/projects/${props.projectId}/requirements/files/${doc.id}/content`) as any
+    const response = await api.get(`/projects/${props.projectId}/requirements/files/${doc.id}/content`) as any
     if (response.is_extracted && response.extracted_content) {
       selectedDocument.value = {
         ...doc,
@@ -411,7 +411,7 @@ const generateAllTestArtifacts = async (doc: RequirementDoc) => {
 
     // 调用后端 API 执行完整流程
     const response = await api.post(
-      `/api/projects/${props.projectId}/modules/${props.moduleId}/requirements/files/${doc.id}/generate-all`
+      `/projects/${props.projectId}/modules/${props.moduleId}/requirements/files/${doc.id}/generate-all`
     ) as any
 
     currentTaskId.value = response.task_id

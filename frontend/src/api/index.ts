@@ -1,5 +1,4 @@
 import axios, { type AxiosInstance, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
-import { useAuthStore } from '@/stores/auth'
 
 // 创建axios实例
 const api: AxiosInstance = axios.create({
@@ -14,9 +13,9 @@ const api: AxiosInstance = axios.create({
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // 添加认证token
-    const authStore = useAuthStore()
-    if (authStore.token) {
-      config.headers.Authorization = `Bearer ${authStore.token}`
+    const token = localStorage.getItem('access_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
     }
     return config
   },
@@ -31,7 +30,6 @@ api.interceptors.response.use(
     return response.data
   },
   (error) => {
-    const authStore = useAuthStore()
 
     if (error.response) {
       const { status, data } = error.response
@@ -46,7 +44,10 @@ api.interceptors.response.use(
             errorMessage = errorMessage || '用户名或密码错误'
           } else {
             // 其他接口的401错误，说明token过期
-            authStore.logout()
+            // 清除本地存储
+            localStorage.removeItem('access_token')
+            localStorage.removeItem('refresh_token')
+            // 强制跳转登录页
             window.location.href = '/login'
             errorMessage = '登录已过期，请重新登录'
           }

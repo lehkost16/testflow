@@ -292,9 +292,19 @@ async def batch_delete_test_cases(
     ).all()]
     
     # 执行删除
+    # 只要满足以下任一条件即可删除：
+    # 1. 属于该项目的测试点
+    # 2. 属于该项目的模块
+    # 3. 直接属于该项目（未分类/导入）
+    filters = [TestCase.project_id == project_id]
+    if module_ids:
+        filters.append(TestCase.module_id.in_(module_ids))
+    if tp_ids:
+        filters.append(TestCase.test_point_id.in_(tp_ids))
+
     deleted = db.query(TestCase).filter(
         TestCase.id.in_(request.ids),
-        TestCase.test_point_id.in_(tp_ids)
+        or_(*filters)
     ).delete(synchronize_session=False)
     
     db.commit()

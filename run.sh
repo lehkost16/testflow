@@ -24,22 +24,22 @@ fi
 echo -e "${BLUE}[1/4] 配置后端环境...${NC}"
 cd backend
 
-# 创建虚拟环境（如果不存在）
-if [ ! -d ".venv" ]; then
-    echo "创建虚拟环境..."
-    python3 -m venv .venv
-fi
+# # 创建虚拟环境（如果不存在）
+# if [ ! -d ".venv" ]; then
+#     echo "创建虚拟环境..."
+#     python3 -m venv .venv
+# fi
 
 # 激活虚拟环境
 source .venv/bin/activate
 
 # 检查依赖是否安装（通过检查 uvicorn 是否存在）
-if ! .venv/bin/pip show uvicorn &> /dev/null; then
+if ! uv pip show uvicorn &> /dev/null; then
     echo "[调试] 当前 Python 路径:"
     which python
     echo "安装后端依赖..."
     export PYTHONUTF8=1
-    .venv/bin/pip install --no-cache-dir -r ../requirements.txt
+    uv sync
 else
     echo "后端依赖已安装，跳过"
 fi
@@ -65,8 +65,8 @@ echo -e "${BLUE}[3/4] 启动服务...${NC}"
 
 # 启动后端
 cd ../backend
-source .venv/bin/activate
-nohup uvicorn app.main:app --reload --port 9000 > backend.log 2>&1 &
+# source .venv/bin/activate
+nohup uv run uvicorn app.main:app --reload --port 9000 > backend.log 2>&1 &
 BACKEND_PID=$!
 echo $BACKEND_PID > backend.pid
 

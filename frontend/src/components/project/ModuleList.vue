@@ -93,6 +93,7 @@
         :class="isAssignedToModule(module) 
           ? 'bg-white/50 hover:bg-white/80 border-gray-100 hover:border-gray-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer' 
           : 'bg-gray-50/50 border-gray-200 opacity-70'"
+        @click="handleModuleCardClick(module)"
       >
         <!-- 模块头部 -->
         <div class="flex justify-between items-start mb-4">
@@ -560,13 +561,38 @@ const loadProjectMembers = async () => {
   }
 }
 
-// 查看模块
-const viewModule = (module: ModuleDetail) => {
+// 处理模块卡片点击
+const handleModuleCardClick = (module: ModuleDetail) => {
+  console.log('[handleModuleCardClick] Module clicked:', module.id, module.name)
+  console.log('[handleModuleCardClick] isAssignedToModule:', isAssignedToModule(module))
+  console.log('[handleModuleCardClick] canEdit:', props.canEdit)
+  console.log('[handleModuleCardClick] authStore.user:', authStore.user)
+  
   if (!isAssignedToModule(module)) {
+    console.warn('[handleModuleCardClick] Access denied - user not assigned to module')
     ElMessage.warning('您没有权限访问此模块，请联系管理员分配任务')
     return
   }
-  router.push(`/projects/${props.projectId}/modules/${module.id}`)
+  
+  const targetRoute = `/projects/${props.projectId}/modules/${module.id}`
+  console.log('[handleModuleCardClick] Navigating to:', targetRoute)
+  router.push(targetRoute)
+}
+
+// 查看模块
+const viewModule = (module: ModuleDetail) => {
+  console.log('[viewModule] Called with module:', module.id, module.name)
+  console.log('[viewModule] isAssignedToModule:', isAssignedToModule(module))
+  
+  if (!isAssignedToModule(module)) {
+    console.warn('[viewModule] Access denied - user not assigned to module')
+    ElMessage.warning('您没有权限访问此模块，请联系管理员分配任务')
+    return
+  }
+  
+  const targetRoute = `/projects/${props.projectId}/modules/${module.id}`
+  console.log('[viewModule] Navigating to:', targetRoute)
+  router.push(targetRoute)
 }
 
 // 显示创建对话框

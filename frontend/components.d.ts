@@ -10,6 +10,7 @@ declare module 'vue' {
     ConcurrencySettings: typeof import('./src/components/settings/ConcurrencySettings.vue')['default']
     DocumentViewerDialog: typeof import('./src/components/module/DocumentViewerDialog.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']
+    ElAvatar: typeof import('element-plus/es')['ElAvatar']
     ElCheckbox: typeof import('element-plus/es')['ElCheckbox']
     ElCol: typeof import('element-plus/es')['ElCol']
     ElDialog: typeof import('element-plus/es')['ElDialog']

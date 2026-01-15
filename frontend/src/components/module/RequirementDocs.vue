@@ -147,34 +147,88 @@
     <el-dialog
       v-model="showUploadDialog"
       title="上传需求文档"
-      width="560px"
+      width="640px"
       :close-on-click-modal="false"
       align-center
       class="upload-dialog"
+      @closed="resetUploadState"
     >
-      <div class="space-y-4">
-        <el-upload
-          ref="uploadRef"
-          drag
-          :auto-upload="false"
-          :limit="1"
-          :on-change="handleFileChange"
-          :on-exceed="handleExceed"
-          accept=".txt,.docx,.md"
-          class="w-full"
-        >
-          <el-icon class="text-5xl text-gray-400 mb-4"><UploadFilled /></el-icon>
-          <div class="text-base text-gray-600 mb-2">
-            拖拽文件到此处，或<span class="text-black font-bold">点击上传</span>
+      <el-tabs v-model="uploadMode" class="upload-tabs">
+        <el-tab-pane name="file">
+          <template #label>
+            <div class="flex items-center gap-2">
+              <el-icon><Upload /></el-icon>
+              <span>文件上传</span>
+            </div>
+          </template>
+          <div class="pt-2">
+            <el-upload
+              ref="uploadRef"
+              drag
+              :auto-upload="false"
+              :limit="1"
+              :on-change="handleFileChange"
+              :on-exceed="handleExceed"
+              accept=".txt,.docx,.md"
+              class="w-full"
+            >
+              <el-icon class="text-5xl text-gray-400 mb-4"><UploadFilled /></el-icon>
+              <div class="text-base text-gray-600 mb-2">
+                拖拽文件到此处，或<span class="text-black font-bold">点击上传</span>
+              </div>
+              <div class="text-sm text-gray-400">
+                支持格式：TXT、DOCX、MD（最大 10MB）
+              </div>
+            </el-upload>
           </div>
-          <div class="text-sm text-gray-400">
-            支持格式：TXT、DOCX、MD（最大 10MB）
+        </el-tab-pane>
+
+        <el-tab-pane name="text">
+          <template #label>
+            <div class="flex items-center gap-2">
+              <el-icon><Edit /></el-icon>
+              <span>文本输入</span>
+            </div>
+          </template>
+          <div class="space-y-4 pt-2">
+            <div class="flex gap-4">
+              <div class="flex-1">
+                <div class="text-xs text-gray-500 mb-1 ml-1">文件名</div>
+                <el-input 
+                  v-model="textFileName" 
+                  placeholder="请输入文件名" 
+                  class="custom-input"
+                >
+                  <template #append>.{{ textFileType }}</template>
+                </el-input>
+              </div>
+              <div class="w-32">
+                <div class="text-xs text-gray-500 mb-1 ml-1">文件类型</div>
+                <el-select v-model="textFileType" class="w-full">
+                  <el-option label="Markdown" value="md" />
+                  <el-option label="Text" value="txt" />
+                </el-select>
+              </div>
+            </div>
+            <div>
+              <div class="text-xs text-gray-500 mb-1 ml-1">需求内容</div>
+              <el-input
+                v-model="textContent"
+                type="textarea"
+                :rows="12"
+                placeholder="在此处输入或粘贴需求内容..."
+                resize="none"
+              />
+              <div class="text-right text-xs text-gray-400 mt-1">
+                已输入 {{ textContent.length }} 字符
+              </div>
+            </div>
           </div>
-        </el-upload>
-      </div>
+        </el-tab-pane>
+      </el-tabs>
 
       <template #footer>
-        <div class="flex justify-end gap-3 pt-4">
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
           <button 
             @click="showUploadDialog = false" 
             class="px-6 py-2.5 rounded-xl text-gray-600 font-bold hover:bg-gray-100 transition-all border border-gray-200"
@@ -183,7 +237,7 @@
           </button>
           <button 
             @click="handleUpload" 
-            :disabled="!selectedFile || uploading" 
+            :disabled="isUploadDisabled || uploading" 
             class="px-6 py-2.5 bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-all shadow-lg shadow-black/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span v-if="uploading">上传中...</span>
@@ -196,9 +250,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox, type UploadInstance } from 'element-plus'
-import { Document, Upload, UploadFilled, Delete, MagicStick, View, Picture, Lightning } from '@element-plus/icons-vue'
+import { Document, Upload, UploadFilled, Delete, MagicStick, View, Picture, Lightning, Edit } from '@element-plus/icons-vue'
 import api from '@/api'
 import DocumentViewerDialog from './DocumentViewerDialog.vue'
 import GeneratePointsDialog from './GeneratePointsDialog.vue'
@@ -230,8 +284,30 @@ const documents = ref<RequirementDoc[]>([])
 const loading = ref(false)
 const showUploadDialog = ref(false)
 const uploading = ref(false)
+const uploadMode = ref<'text' | 'file'>('file')
+const textContent = ref('')
+const textFileName = ref('')
+const textFileType = ref('md')
 const selectedFile = ref<File | null>(null)
 const uploadRef = ref<UploadInstance>()
+
+// 检查上传按钮是否禁用
+const isUploadDisabled = computed(() => {
+  if (uploadMode.value === 'file') {
+    return !selectedFile.value
+  } else {
+    return !textFileName.value.trim() || !textContent.value.trim()
+  }
+})
+
+// 重置上传状态
+const resetUploadState = () => {
+  textContent.value = ''
+  textFileName.value = ''
+  textFileType.value = 'md'
+  selectedFile.value = null
+  uploadRef.value?.clearFiles()
+}
 
 // 文档查看对话框状态
 const showViewerDialog = ref(false)
@@ -276,23 +352,34 @@ const handleExceed = () => {
 
 // 上传文件
 const handleUpload = async () => {
-  if (!selectedFile.value) return
+  let fileToUpload: File | null = null
+
+  if (uploadMode.value === 'file') {
+    fileToUpload = selectedFile.value
+  } else {
+    if (!textFileName.value.trim() || !textContent.value.trim()) {
+      ElMessage.warning('请填写文件名和需求内容')
+      return
+    }
+    const fullFileName = `${textFileName.value.trim()}.${textFileType.value}`
+    const blob = new Blob([textContent.value], { type: 'text/plain' })
+    fileToUpload = new File([blob], fullFileName, { type: 'text/plain' })
+  }
+
+  if (!fileToUpload) return
 
   uploading.value = true
   const formData = new FormData()
-  formData.append('file', selectedFile.value)
-  // module_id现在在路径中，不需要单独传递
-  // formData.append('module_id', props.moduleId.toString())
+  formData.append('file', fileToUpload)
 
   try {
     // 使用模块级API路径，api实例会自动添加baseURL和认证token
     await api.post(`/projects/${props.projectId}/modules/${props.moduleId}/requirements/files`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
-    ElMessage.success('文档上传成功')
+    ElMessage.success('需求上传成功')
     showUploadDialog.value = false
-    selectedFile.value = null
-    uploadRef.value?.clearFiles()
+    resetUploadState()
     loadDocuments()
   } catch (error: any) {
     console.error('上传失败:', error)
@@ -485,6 +572,57 @@ onMounted(() => {
 :deep(.el-upload-dragger:hover) {
   border-color: #9ca3af;
   background-color: #f3f4f6;
+}
+
+.upload-tabs :deep(.el-tabs__header) {
+  margin-bottom: 20px;
+}
+
+.upload-tabs :deep(.el-tabs__nav-wrap::after) {
+  display: none;
+}
+
+.upload-tabs :deep(.el-tabs__active-bar) {
+  background-color: black;
+  height: 3px;
+  border-radius: 3px;
+}
+
+.upload-tabs :deep(.el-tabs__item) {
+  font-weight: bold;
+  font-size: 15px;
+  transition: all 0.3s;
+}
+
+.upload-tabs :deep(.el-tabs__item.is-active) {
+  color: black;
+}
+
+.upload-tabs :deep(.el-tabs__item:hover) {
+  color: #374151;
+}
+
+:deep(.el-textarea__inner) {
+  border-radius: 12px;
+  padding: 12px;
+  border-color: #e5e7eb;
+}
+
+:deep(.el-textarea__inner:focus) {
+  border-color: black;
+  box-shadow: 0 0 0 1px black;
+}
+
+:deep(.el-input-group__append) {
+  background-color: #f9fafb;
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+  font-weight: bold;
+  color: #6b7280;
+}
+
+:deep(.el-input__wrapper) {
+  border-radius: 12px;
 }
 </style>
 

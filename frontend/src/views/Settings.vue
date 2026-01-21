@@ -34,6 +34,20 @@
           </div>
         </el-tab-pane>
 
+
+         <!-- AI模型配置 -->
+        <el-tab-pane label="AI模型配置" name="ai">
+          <template #label>
+            <div class="flex items-center gap-2">
+              <el-icon><SetUp /></el-icon>
+              <span>AI模型配置</span>
+            </div>
+          </template>
+          <div class="py-4">
+            <AiModelSettings />
+          </div>
+        </el-tab-pane>
+
         <!-- 并发配置标签页 -->
         <el-tab-pane label="并发配置" name="concurrency">
           <template #label>
@@ -57,6 +71,7 @@ import { Collection, SetUp, Operation } from '@element-plus/icons-vue'
 import TestCategories from '@/components/settings/TestCategories.vue'
 import TestDesignMethods from '@/components/settings/TestDesignMethods.vue'
 import ConcurrencySettings from '@/components/settings/ConcurrencySettings.vue'
+import AiModelSettings from '@/components/settings/AiModelSettings.vue'
 
 // 当前激活的标签页
 const activeTab = ref('categories')

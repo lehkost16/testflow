@@ -44,6 +44,10 @@ def suite_to_topic(suite, is_root=False):
         }
     }
     
+    # Add Note (Details)
+    if suite.details:
+        topic["note"] = suite.details
+
     # Structure Class (Logic right for root)
     if is_root:
         topic["structureClass"] = "org.xmind.ui.logic.right"
@@ -73,6 +77,14 @@ def case_to_topic(case):
         }
     }
     
+    # Add Note (Preconditions)
+    if case.preconditions:
+        topic["note"] = case.preconditions
+        
+    # Add Comment (Summary)
+    if case.summary:
+        topic["comment"] = case.summary
+
     # Add Priority Marker
     if case.importance:
         try:

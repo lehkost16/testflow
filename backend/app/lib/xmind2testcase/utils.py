@@ -4,8 +4,8 @@ import json
 import os
 import xmind
 import logging
-from xmind2testcase.parser import xmind_to_testsuites
-from xmindparser import is_xmind_zen,xmind_to_dict
+from .parser import xmind_to_testsuites
+from ..xmindparser import is_xmind_zen,xmind_to_dict
 
 
 def get_absolute_path(path):

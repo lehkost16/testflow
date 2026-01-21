@@ -177,8 +177,8 @@ def init_database():
         # 创建管理员用户
         admin_user = create_admin_user(db)
         
-        # 创建演示用户
-        demo_user = create_demo_user(db)
+        # # 创建演示用户
+        # demo_user = create_demo_user(db)
         
         # 创建默认AI模型
         ai_models = create_default_ai_models(db, admin_user)

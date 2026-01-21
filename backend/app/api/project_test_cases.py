@@ -12,6 +12,8 @@ from app.database import get_db
 from app.models.user import User, ProjectMember, ProjectRole
 from app.models.project import Project
 from app.models.module import Module
+from app.lib.xmind2testcase.writer import write_xmind_zip
+from app.lib.xmind2testcase.metadata import TestSuite as XMindTestSuite, TestCase as XMindTestCase, TestStep as XMindTestStep
 from app.models.requirement import RequirementPoint
 from app.models.testcase import TestPoint, TestCase, TestCaseStatus
 from app.core.dependencies import get_current_active_user
@@ -414,7 +416,7 @@ async def delete_single_test_case(
 class ExportRequest(BaseModel):
     """导出请求"""
     ids: Optional[List[int]] = None  # 指定导出的用例ID，为空则导出全部
-    format: str = "excel"  # 导出格式：excel, xmind
+    format: str = "csv"  # 导出格式：excel, xmind
 
 
 @router.post("/projects/{project_id}/test-cases/export")
@@ -501,68 +503,46 @@ async def export_test_cases(
     if request.format == "xmind":
         return export_to_xmind(project, modules, test_cases, tp_rp_map, rp_module_map)
     else:
-        return export_to_excel(project, modules, test_cases, tp_rp_map, rp_module_map, module_map, db)
+        return export_to_csv(project, modules, test_cases, tp_rp_map, rp_module_map, module_map, db)
 
 
-def export_to_excel(project, modules, test_cases, tp_rp_map, rp_module_map, module_map, db: Session):
-    """导出到Excel"""
+def export_to_csv(project, modules, test_cases, tp_rp_map, rp_module_map, module_map, db: Session):
+    """导出到 CSV"""
     from fastapi.responses import StreamingResponse
-    from openpyxl import Workbook
-    from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
-    from io import BytesIO
+    from io import StringIO
     from datetime import datetime
     from urllib.parse import quote
+    import csv
 
-    # 创建Excel工作簿
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "测试用例"
+    # CSV 内存流（注意：csv 用文本流）
+    output = StringIO()
+    writer = csv.writer(output)
 
-    # 定义样式
-    header_font = Font(bold=True, size=11, color="FFFFFF")
-    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
-    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-    cell_alignment = Alignment(horizontal="left", vertical="top", wrap_text=True)
-    thin_border = Border(
-        left=Side(style='thin'),
-        right=Side(style='thin'),
-        top=Side(style='thin'),
-        bottom=Side(style='thin')
-    )
+    # 表头
+    headers = [
+        "序号", "所属模块", "用例名称", "前置条件",
+        "步骤", "预期", "优先级", "用例类型", "适用阶段", "状态"
+    ]
+    writer.writerow(headers)
 
-    # 定义表头
-    headers = ["序号", "所属模块", "用例名称", "前置条件", "步骤", "预期", "优先级", "用例类型", "适用阶段", "状态"]
-
-    # 写入表头
-    for col, header in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col, value=header)
-        cell.font = header_font
-        cell.fill = header_fill
-        cell.alignment = header_alignment
-        cell.border = thin_border
-
-    # 优先级映射
+    # 映射关系
     priority_map = {"high": "高", "medium": "中", "low": "低"}
-
-    # 状态映射
     status_map = {"draft": "草稿", "under_review": "评审中", "approved": "已通过"}
 
-    # 从数据库获取测试分类映射
+    # 测试分类
     from app.models.settings import TestCategory
     categories = db.query(TestCategory).filter(TestCategory.is_active == True).all()
     category_map = {c.code: c.name for c in categories}
 
-    # 从数据库获取设计方法映射
+    # 设计方法
     from app.models.settings import TestDesignMethod
     methods = db.query(TestDesignMethod).filter(TestDesignMethod.is_active == True).all()
     method_map = {m.code: m.name for m in methods}
 
-    # 写入数据
+    # 写数据
     for idx, tc in enumerate(test_cases, 1):
-        row = idx + 1
 
-        # 获取模块名称
-        # 获取模块名称
+        # 模块名称解析逻辑（保持不变）
         tp_id = tc.test_point_id
         rp_id = tp_rp_map.get(tp_id) if tp_id else None
         module_id = rp_module_map.get(rp_id) if rp_id else tc.module_id
@@ -573,7 +553,7 @@ def export_to_excel(project, modules, test_cases, tp_rp_map, rp_module_map, modu
         elif tc.import_module_name:
             module_name = tc.import_module_name
 
-        # 格式化测试步骤和预期结果
+        # 步骤 / 预期（CSV 用 \n 没问题，Excel/WPS 能识别）
         steps_text = ""
         expected_text = ""
         if tc.test_steps and isinstance(tc.test_steps, list):
@@ -587,129 +567,167 @@ def export_to_excel(project, modules, test_cases, tp_rp_map, rp_module_map, modu
             steps_text = "\n".join(steps_lines)
             expected_text = "\n".join(expected_lines)
 
-        # 写入单元格
-        data = [
+        writer.writerow([
             idx,                                                    # 序号
-            module_name,                                            # 模块名称
-            tc.title or "",                                         # 用例标题
+            module_name,                                            # 所属模块
+            tc.title or "",                                         # 用例名称
             tc.preconditions or "",                                 # 前置条件
-            steps_text,                                             # 测试步骤
-            expected_text,                                          # 预期结果
+            steps_text,                                             # 步骤
+            expected_text,                                          # 预期
             priority_map.get(tc.priority, tc.priority or ""),       # 优先级
-            category_map.get(tc.test_category, tc.test_category or ""),  # 测试分类
-            method_map.get(tc.design_method, tc.design_method or ""),    # 设计方法
+            category_map.get(tc.test_category, tc.test_category or ""),  # 用例类型
+            method_map.get(tc.design_method, tc.design_method or ""),    # 适用阶段
             status_map.get(tc.status, tc.status or "")              # 状态
-        ]
+        ])
 
-        for col, value in enumerate(data, 1):
-            cell = ws.cell(row=row, column=col, value=value)
-            cell.alignment = cell_alignment
-            cell.border = thin_border
-
-    # 调整列宽
-    column_widths = [8, 15, 40, 25, 50, 50, 10, 12, 15, 10]
-    for i, width in enumerate(column_widths, 1):
-        ws.column_dimensions[ws.cell(row=1, column=i).column_letter].width = width
-
-    # 保存到内存
-    output = BytesIO()
-    wb.save(output)
     output.seek(0)
 
-    # 生成文件名
-    filename = f"{project.name}_测试用例_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    # 文件名
+    filename = f"{project.name}_测试用例_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     encoded_filename = quote(filename)
 
     return StreamingResponse(
-        output,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        iter([output.getvalue()]),
+        media_type="text/csv; charset=utf-8",
         headers={
             "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
         }
     )
 
 
+
 def export_to_xmind(project, modules, test_cases, tp_rp_map, rp_module_map):
     """
-    导出到XMind思维导图 (XMind ZEN/2020+ JSON格式)
+    导出到 XMind (Zen / 2020+ JSON 格式)，支持分级模块合并及标题层级切割
     """
     from fastapi.responses import StreamingResponse
     from datetime import datetime
     from urllib.parse import quote
-    from app.utils.xmind_builder import XMindBuilder
+    import re
 
-    builder = XMindBuilder()
-    root_topic = builder.set_root(f"{project.name} - 测试用例", "org.xmind.ui.map.logic.right")
+    # 1️⃣ 初始化根套件
+    root_suite = XMindTestSuite(name=f"{project.name} - 测试用例")
+    root_suite.sub_suites = []
 
-    # 按模块分组用例
-    module_cases = {}
+    # 2️⃣ 模块层级管理器
+    # path_key (tuple of names) -> XMindTestSuite
+    suite_cache = {}
+
+    def get_or_create_suite(path_names):
+        """递归获取或创建嵌套套件"""
+        if not path_names:
+            return root_suite
+        
+        current_path = []
+        parent = root_suite
+        
+        for name in path_names:
+            current_path.append(name)
+            path_key = tuple(current_path)
+            
+            if path_key not in suite_cache:
+                new_suite = XMindTestSuite(name=name)
+                if not parent.sub_suites:
+                    parent.sub_suites = []
+                parent.sub_suites.append(new_suite)
+                suite_cache[path_key] = new_suite
+            
+            parent = suite_cache[path_key]
+        
+        return parent
+
+    # 3️⃣ 预处理系统模块
+    module_id_to_base_path = {}
+    for mod in modules:
+        # 系统模块名可能包含 /
+        base_path = [p.strip() for p in mod.name.replace("\\", "/").split("/") if p.strip()]
+        # 确保基础路径的 Suite 存在
+        get_or_create_suite(base_path)
+        module_id_to_base_path[mod.id] = base_path
+
+    # 4️⃣ 分类测试用例
     for tc in test_cases:
+        # 确定归属模块路径
         tp_id = tc.test_point_id
-        rp_id = tp_rp_map.get(tp_id)
-        module_id = rp_module_map.get(rp_id) if rp_id else 0
-        if module_id not in module_cases:
-            module_cases[module_id] = []
-        module_cases[module_id].append(tc)
+        rp_id = tp_rp_map.get(tp_id) if tp_id else None
+        module_id = rp_module_map.get(rp_id) if rp_id else tc.module_id
 
-    # 优先级标记
-    priority_markers = {"high": "[高]", "medium": "[中]", "low": "[低]"}
+        # 初始路径
+        if module_id and module_id in module_id_to_base_path:
+            full_path = list(module_id_to_base_path[module_id])
+        elif tc.import_module_name:
+            full_path = [p.strip() for p in tc.import_module_name.replace("\\", "/").split("/") if p.strip()]
+        else:
+            full_path = ["未分类"]
 
-    # 添加模块节点
-    for module in modules:
-        if module.id not in module_cases:
-            continue
+        # 标题层级切割: "操作按钮 - 审核功能 - 图片收藏" -> ["操作按钮", "审核功能", "图片收藏"]
+        # 支持多种常见分隔符如 - , / , \
+        title_parts = [p.strip() for p in re.split(r'[-/\\—]+', tc.title) if p.strip()]
+        
+        if len(title_parts) > 1:
+            # 前面部分作为路径
+            title_path = title_parts[:-1]
+            case_name = title_parts[-1]
+            
+            # 如果标题路径的第一部分已经在当前路径中，进行智能合并
+            if full_path and full_path != ["未分类"] and title_path and title_path[0] == full_path[0]:
+                i = 0
+                while i < len(full_path) and i < len(title_path) and full_path[i] == title_path[i]:
+                    i += 1
+                # 拼接剩余不重叠的标题路径
+                full_path.extend(title_path[i:])
+            elif full_path == ["未分类"]:
+                # 如果是未分类但标题有层级，直接以标题层级为准
+                full_path = title_path
+            else:
+                # 否则追加层级
+                full_path.extend(title_path)
+        else:
+            case_name = tc.title or "未命名用例"
 
-        module_topic = builder.create_topic(f"[模块] {module.name}")
-        builder.add_child(root_topic, module_topic)
+        # 获取最终归属套件
+        target_suite = get_or_create_suite(full_path)
 
-        # 添加用例节点
-        for tc in module_cases[module.id]:
-            priority_mark = priority_markers.get(tc.priority, "")
-            case_topic = builder.create_topic(f"{priority_mark} {tc.title}")
-            builder.add_child(module_topic, case_topic)
+        # 5️⃣ 组装 TestStep
+        steps = []
+        if tc.test_steps and isinstance(tc.test_steps, list):
+            for idx, step_data in enumerate(tc.test_steps, 1):
+                if isinstance(step_data, dict):
+                    steps.append(
+                        XMindTestStep(
+                            step_number=idx,
+                            actions=step_data.get("action") or step_data.get("actions") or "",
+                            expectedresults=step_data.get("expected") or step_data.get("expectedresults") or ""
+                        )
+                    )
 
-            # 前置条件
-            if tc.preconditions:
-                pre_topic = builder.create_topic(f"[前置条件] {tc.preconditions}")
-                builder.add_child(case_topic, pre_topic)
+        # 6️⃣ 组装 XMindTestCase
+        importance_map = {"high": 1, "medium": 2, "low": 3}
+        execution_type = 1 # 默认手工
+        
+        case = XMindTestCase(
+            name=case_name,
+            summary=tc.description or "",
+            preconditions=tc.preconditions or "",
+            importance=importance_map.get(tc.priority, 2),
+            execution_type=execution_type,
+            steps=steps,
+            tc_id=str(tc.id)
+        )
 
-            # 测试步骤
-            if tc.test_steps and isinstance(tc.test_steps, list):
-                steps_topic = builder.create_topic("[测试步骤]")
-                builder.add_child(case_topic, steps_topic)
+        if not target_suite.testcase_list:
+            target_suite.testcase_list = []
+        target_suite.testcase_list.append(case)
 
-                expected_topic = builder.create_topic("[预期结果]")
-                builder.add_child(case_topic, expected_topic)
+    # 7️⃣ 生成 XMind ZIP
+    xmind_bytes = write_xmind_zip([root_suite])
 
-                for i, step in enumerate(tc.test_steps, 1):
-                    action = step.get("action", "") if isinstance(step, dict) else str(step)
-                    expected = step.get("expected", "") if isinstance(step, dict) else ""
-
-                    if action:
-                        step_topic = builder.create_topic(f"{i}. {action}")
-                        builder.add_child(steps_topic, step_topic)
-
-                    if expected:
-                        exp_topic = builder.create_topic(f"{i}. {expected}")
-                        builder.add_child(expected_topic, exp_topic)
-
-    # 处理未分类的用例
-    if 0 in module_cases:
-        other_topic = builder.create_topic("[模块] 未分类")
-        builder.add_child(root_topic, other_topic)
-        for tc in module_cases[0]:
-            priority_mark = priority_markers.get(tc.priority, "")
-            case_topic = builder.create_topic(f"{priority_mark} {tc.title}")
-            builder.add_child(other_topic, case_topic)
-
-    output = builder.build()
-
-    # 生成文件名
+    # 8️⃣ 下载返回
     filename = f"{project.name}_测试用例_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xmind"
     encoded_filename = quote(filename)
 
     return StreamingResponse(
-        output,
+        xmind_bytes,
         media_type="application/octet-stream",
         headers={
             "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
@@ -781,122 +799,213 @@ async def import_test_cases(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """从Excel导入测试用例"""
+    """从 Excel 或 XMind 导入测试用例"""
     import pandas as pd
+    import os
+    import tempfile
     from io import BytesIO
     from app.models.module import Module
+    from app.lib.xmind2testcase.utils import get_xmind_testsuites
 
-    # 检查权限
+    # 1️⃣ 检查权限
     check_project_edit_permission(project_id, current_user, db)
 
-    if not file.filename.endswith(('.xlsx', '.xls')):
-        raise HTTPException(status_code=400, detail="仅支持 Excel 文件 (.xlsx, .xls)")
-
+    temp_path = None
     try:
-        # 读取Excel
-        content = await file.read()
-        df = pd.read_excel(BytesIO(content))
+        # 2️⃣ 解析数据
+        imported_data = [] # List of dict: {path, title, preconditions, steps, expected, priority, method, category}
 
-        # 验证表头
-        required_columns = ["所属模块", "用例标题"]
-        if not all(col in df.columns for col in required_columns):
-            raise HTTPException(status_code=400, detail=f"文件缺少必要列: {', '.join(required_columns)}")
+        if file.filename.endswith(('.xlsx', '.xls')):
+            content = await file.read()
+            df = pd.read_excel(BytesIO(content))
+            required_columns = ["所属模块", "用例标题"]
+            if not all(col in df.columns for col in required_columns):
+                raise HTTPException(status_code=400, detail=f"文件缺少必要列: {', '.join(required_columns)}")
+            
+            for _, row in df.iterrows():
+                title = str(row.get("用例标题", "")).strip()
+                if not title or title == "nan": continue
+                
+                path = str(row.get("所属模块", "未分类")).strip()
+                if path == "nan": path = "未分类"
+                
+                imported_data.append({
+                    "path": path,
+                    "title": title,
+                    "preconditions": str(row.get("前置条件", "")) if str(row.get("前置条件", "")) != "nan" else "",
+                    "steps_raw": str(row.get("测试步骤", "")),
+                    "expected_raw": str(row.get("预期结果", "")),
+                    "priority": str(row.get("优先级(高/中/低)", "中")).strip(),
+                    "design_method": str(row.get("设计方法", "")) if str(row.get("设计方法", "")) != "nan" else "",
+                    "test_category": str(row.get("测试分类", "")) if str(row.get("测试分类", "")) != "nan" else ""
+                })
 
-        # 预加载现有模块
+        elif file.filename.endswith('.xmind'):
+            # 保存到临时文件
+            suffix = ".xmind"
+            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                content = await file.read()
+                tmp.write(content)
+                temp_path = tmp.name
+            
+            # 解析 XMind
+            testsuites = get_xmind_testsuites(temp_path)
+            
+            def flatten_suite(suite, current_path):
+                # suite 是 metadata.TestSuite 对象
+                # current_path 是列表
+                
+                # 处理当前层级的用例
+                if suite.testcase_list:
+                    path_str = " / ".join(current_path) if current_path else "未分类"
+                    for tc in suite.testcase_list:
+                        # tc 是 metadata.TestCase 对象
+                        # 转换步骤
+                        steps = []
+                        if tc.steps:
+                            for s in tc.steps:
+                                steps.append({
+                                    "action": s.actions,
+                                    "expected": s.expectedresults
+                                })
+                        
+                        p_map = {1: "高", 2: "中", 3: "低"}
+                        imported_data.append({
+                            "path": path_str,
+                            "title": tc.name,
+                            "preconditions": tc.preconditions or "",
+                            "test_category": "functional",
+                            "test_steps": steps, # XMind 直接解析出了结构化步骤
+                            "priority": p_map.get(tc.importance, "中"),
+                            "design_method": "scenario"
+                        })
+                
+                # 递归处理子套件
+                if suite.sub_suites:
+                    for sub in suite.sub_suites:
+                        flatten_suite(sub, current_path + [sub.name])
+
+            for ts in testsuites:
+                # TS 根节点通常是文件名或画布名，如果不想要它可以直接传子节点
+                if ts.sub_suites:
+                    for sub in ts.sub_suites:
+                        flatten_suite(sub, [sub.name])
+                else:
+                    # 只有根节点下有案例的情况
+                    flatten_suite(ts, [] )
+
+        else:
+            raise HTTPException(status_code=400, detail="不支持的文件格式")
+
+        # 3️⃣ 合并标题一致的用例
+        merged_map = {} # (path, title) -> data_dict
+        for item in imported_data:
+            key = (item["path"], item["title"])
+            if key not in merged_map:
+                merged_map[key] = item
+            else:
+                target = merged_map[key]
+                # 合并前置条件
+                if item.get("preconditions") and item["preconditions"] not in target["preconditions"]:
+                    target["preconditions"] += "\n" + item["preconditions"]
+                
+                # 合并步骤
+                if "test_steps" in item:
+                    if "test_steps" not in target: target["test_steps"] = []
+                    target["test_steps"].extend(item["test_steps"])
+                else:
+                    # Excel 导入的 raw 字段合并
+                    target["steps_raw"] = (target.get("steps_raw", "") + "\n" + item.get("steps_raw", "")).strip()
+                    target["expected_raw"] = (target.get("expected_raw", "") + "\n" + item.get("expected_raw", "")).strip()
+
+        # 4️⃣ 预加载/创建模块
         existing_modules = db.query(Module).filter(Module.project_id == project_id).all()
         module_map = {m.name: m.id for m in existing_modules}
 
+        def get_or_create_module(name):
+            name = name.strip()
+            if not name: name = "未分类"
+            if name in module_map:
+                return module_map[name]
+            
+            # 创建新模块
+            new_mod = Module(name=name, project_id=project_id)
+            db.add(new_mod)
+            db.flush() # 获取 ID
+            module_map[name] = new_mod.id
+            return new_mod.id
+
+        # 5️⃣ 写入数据库
         imported_count = 0
-        new_cases = []
-
-        for _, row in df.iterrows():
-            title = str(row.get("用例标题", "")).strip()
-            if not title or title == "nan":
-                continue
-
-            # 处理模块
-            module_name = str(row.get("所属模块", "")).strip()
-            if not module_name or module_name == "nan":
-                module_name = "未分类"
-
-            module_id = None
-            import_module_name = None
-
-            if module_name in module_map:
-                module_id = module_map[module_name]
-            else:
-                # 不创建新模块，而是记录导入时的模块名称
-                import_module_name = module_name
-                # module_id 保持为 None，即归入"未分类"
-
-            # 处理其他字段
+        for data in merged_map.values():
+            module_id = get_or_create_module(data["path"])
+            
             priority_map = {"高": "high", "中": "medium", "低": "low"}
-            priority_raw = str(row.get("优先级(高/中/低)", "中")).strip()
-            priority = priority_map.get(priority_raw, "medium")
+            priority = priority_map.get(data["priority"], "medium")
 
-            steps_raw = row.get("测试步骤", "")
-            expected_raw = row.get("预期结果", "")
-
-            # 解析步骤：按编号分割（支持 "1. xxx" 格式）
-            test_steps = []
-            if steps_raw and str(steps_raw) != "nan":
+            # 处理步骤（针对 Excel 的解析逻辑，XMind 已在前面处理）
+            test_steps = data.get("test_steps", [])
+            if not test_steps and data.get("steps_raw"):
+                # 复用原来的 Excel 解析逻辑
                 import re
-                steps_text = str(steps_raw)
-                expected_text = str(expected_raw) if str(expected_raw) != "nan" else ""
-
-                # 使用正则按 "数字." 分割
+                steps_text = str(data["steps_raw"])
+                expected_text = str(data.get("expected_raw", ""))
                 step_pattern = re.compile(r'(\d+)\.\s*')
                 step_parts = step_pattern.split(steps_text)
                 expected_parts = step_pattern.split(expected_text)
-
-                # step_parts: ['', '1', 'step1内容', '2', 'step2内容', ...]
+                
                 step_dict = {}
                 for i in range(1, len(step_parts) - 1, 2):
                     num = step_parts[i]
-                    content = step_parts[i + 1].strip() if i + 1 < len(step_parts) else ""
+                    content = step_parts[i+1].strip() if i+1 < len(step_parts) else ""
                     step_dict[num] = content
-
+                
                 expected_dict = {}
                 for i in range(1, len(expected_parts) - 1, 2):
                     num = expected_parts[i]
-                    content = expected_parts[i + 1].strip() if i + 1 < len(expected_parts) else ""
+                    content = expected_parts[i+1].strip() if i+1 < len(expected_parts) else ""
                     expected_dict[num] = content
-
-                # 合并为 test_steps 列表
+                
                 if step_dict:
                     for num in sorted(step_dict.keys(), key=lambda x: int(x)):
-                        test_steps.append({
-                            "action": step_dict.get(num, ""),
-                            "expected": expected_dict.get(num, "")
-                        })
+                        test_steps.append({"action": step_dict[num], "expected": expected_dict.get(num, "")})
                 else:
-                    # 无法解析时，作为单个步骤
-                    test_steps = [{"action": steps_text.strip(), "expected": expected_text.strip()}]
+                    test_steps = [{"action": steps_text, "expected": expected_text}]
 
-            new_case = TestCase(
-                title=title,
-                module_id=module_id,
-                import_module_name=import_module_name,
-                project_id=project_id,  # 直接关联项目
-                preconditions=str(row.get("前置条件", "")) if str(row.get("前置条件", "")) != "nan" else None,
-                test_steps=test_steps,
-                expected_result=str(expected_raw) if str(expected_raw) != "nan" else None,
-                priority=priority,
-                design_method=str(row.get("设计方法", "")) if str(row.get("设计方法", "")) != "nan" else None,
-                test_category=str(row.get("测试分类", "")) if str(row.get("测试分类", "")) != "nan" else None,
-                created_by=current_user.id,
-                status=TestCaseStatus.DRAFT,
-                created_by_ai=False
-            )
-            db.add(new_case)
+            # 检查是否存在同名用例，实现覆盖逻辑
+            existing_case = db.query(TestCase).filter(
+                TestCase.project_id == project_id,
+                TestCase.module_id == module_id,
+                TestCase.title == data["title"]
+            ).first()
+
+            if existing_case:
+                # 覆盖逻辑
+                existing_case.preconditions = data.get("preconditions")
+                existing_case.test_steps = test_steps
+                existing_case.priority = priority
+                existing_case.design_method = data.get("design_method")
+                existing_case.test_category = data.get("test_category")
+                existing_case.status = TestCaseStatus.DRAFT # 覆盖后重置为草稿
+            else:
+                # 创建新用例
+                new_case = TestCase(
+                    title=data["title"],
+                    module_id=module_id,
+                    project_id=project_id,
+                    preconditions=data.get("preconditions"),
+                    test_steps=test_steps,
+                    priority=priority,
+                    design_method=data.get("design_method"),
+                    test_category=data.get("test_category"),
+                    created_by=current_user.id,
+                    status=TestCaseStatus.DRAFT
+                )
+                db.add(new_case)
+            
             imported_count += 1
-            new_cases.append(new_case)
 
         db.commit()
-
-        # 如果开启了自动优化 (这里仅做标记，实际优化逻辑可能需要异步任务)
-        # TODO: Implement auto-optimize logic (call AI service)
-
         return {"success": True, "imported_count": imported_count, "message": f"成功导入 {imported_count} 条测试用例"}
 
     except Exception as e:
@@ -904,3 +1013,6 @@ async def import_test_cases(
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"导入失败: {str(e)}")
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            os.remove(temp_path)

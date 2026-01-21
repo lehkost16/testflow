@@ -2,7 +2,7 @@
 # _*_ coding:utf-8 _*_
 
 import logging
-from xmind2testcase.metadata import TestSuite, TestCase, TestStep
+from .metadata import TestSuite, TestCase, TestStep
 
 config = {'sep': ' ',
           'valid_sep': '&>+/-',

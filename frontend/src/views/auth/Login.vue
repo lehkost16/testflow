@@ -229,7 +229,7 @@
             </router-link>
           </p>
           
-          <div class="pt-6 border-t border-gray-200/50">
+          <!-- <div class="pt-6 border-t border-gray-200/50">
             <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">演示账号</p>
             <div class="flex gap-3 justify-center">
               <button
@@ -245,7 +245,7 @@
                 普通用户
               </button>
             </div>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>
@@ -297,16 +297,16 @@ const handleLogin = async () => {
   }
 }
 
-// 填充演示账号
-const fillDemoAccount = (type: 'admin' | 'demo') => {
-  if (type === 'admin') {
-    loginForm.username = 'admin'
-    loginForm.password = 'admin123'
-  } else {
-    loginForm.username = 'demo'
-    loginForm.password = 'demo123'
-  }
-}
+// // 填充演示账号
+// const fillDemoAccount = (type: 'admin' | 'demo') => {
+//   if (type === 'admin') {
+//     loginForm.username = 'admin'
+//     loginForm.password = 'admin123'
+//   } else {
+//     loginForm.username = 'demo'
+//     loginForm.password = 'demo123'
+//   }
+// }
 </script>
 
 <style scoped>

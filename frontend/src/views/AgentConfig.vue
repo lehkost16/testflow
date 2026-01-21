@@ -2,9 +2,13 @@
   <div class="agent-config">
     <div class="page-header mb-6 flex justify-between items-center">
       <p class="text-gray-500">配置和管理AI智能体，设置不同的智能体角色和参数以优化测试生成效果</p>
-      <button @click="refreshAgents" class="bg-white hover:bg-gray-50 text-gray-900 px-4 py-2 rounded-xl font-bold border border-gray-200 transition-colors flex items-center gap-2">
+      <button @click="refreshAgents" class="ml-auto bg-white hover:bg-gray-50 text-gray-900 px-4 py-2 rounded-xl font-bold border border-gray-200 transition-colors flex items-center gap-2">
         <el-icon><Refresh /></el-icon>
         刷新
+      </button>      
+      <button @click="addAgent" class="bg-white hover:bg-gray-50 text-gray-900 px-4 py-2 rounded-xl font-bold border border-gray-200 transition-colors flex items-center gap-2">
+        <el-icon><Plus /></el-icon>
+        添加智能体
       </button>
     </div>
 
@@ -115,9 +119,18 @@
     >
       <el-form :model="agentForm" label-width="120px" class="mt-4">
 
-        
+        <el-form-item label="名称">
+          <el-input v-model="agentForm.name" placeholder="请输入智能体名称" />
+        </el-form-item>
+
         <el-form-item label="智能体类型">
-          <div class="px-3 py-1.5 bg-gray-100 rounded-lg text-sm font-bold text-gray-700 inline-block">
+          <el-select v-if="!editingAgent" v-model="agentForm.type" placeholder="请选择智能体类型" class="w-full">
+            <el-option label="需求分析" value="requirement_splitter" />
+            <el-option label="测试分析" value="test_point_generator" />
+            <el-option label="用例设计" value="test_case_designer" />
+            <el-option label="用例优化" value="test_case_optimizer" />
+          </el-select>
+          <div v-else class="px-3 py-1.5 bg-gray-100 rounded-lg text-sm font-bold text-gray-700 inline-block">
             {{ getAgentTypeName(agentForm.type) }}
           </div>
         </el-form-item>
@@ -235,6 +248,20 @@ const refreshAgents = async () => {
   }
 }
 
+const addAgent = () => {
+  editingAgent.value = null
+  agentForm.value = {
+    name: '',
+    type: 'requirement_splitter', // Default type
+    ai_model_id: null,
+    temperature: 0.7,
+    max_tokens: 2000,
+    system_prompt: '',
+    is_active: false
+  }
+  showEditDialog.value = true
+}
+
 // 加载可用的AI模型
 const loadAvailableModels = async () => {
   try {
@@ -255,21 +282,26 @@ const editAgent = (agent: any) => {
 const saveAgent = async () => {
   saving.value = true
   try {
-    // 使用统一的API实例更新智能体配置
-    await api.put(`/ai/agents/${editingAgent.value.id}`, {
-      ai_model_id: agentForm.value.ai_model_id,
-      temperature: agentForm.value.temperature,
-      max_tokens: agentForm.value.max_tokens,
-      system_prompt: agentForm.value.system_prompt,
-      is_active: agentForm.value.is_active
-    })
+    // 使用统一的API实例创建或更新智能体配置
+    if (editingAgent.value) {
+      await api.put(`/ai/agents/${editingAgent.value.id}`, {
+        name: agentForm.value.name,
+        ai_model_id: agentForm.value.ai_model_id,
+        temperature: agentForm.value.temperature,
+        max_tokens: agentForm.value.max_tokens,
+        system_prompt: agentForm.value.system_prompt,
+        is_active: agentForm.value.is_active
+      })
+    } else {
+      await api.post('/ai/agents', agentForm.value)
+    }
     
     ElMessage.success('配置保存成功')
     cancelEdit()
     refreshAgents()
   } catch (error: any) {
     console.error('保存智能体配置失败:', error)
-    ElMessage.error('保存失败')
+    ElMessage.error(error.response?.data?.detail || '保存失败')
   } finally {
     saving.value = false
   }

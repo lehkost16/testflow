@@ -292,24 +292,24 @@
             type="file" 
             ref="fileInput" 
             class="hidden" 
-            accept=".xlsx,.xls" 
+            accept=".xlsx,.xls,.xmind" 
             @change="handleFileChange"
           >
           <el-icon class="text-4xl text-gray-400 mb-2"><UploadFilled /></el-icon>
-          <p v-if="!selectedFile" class="text-sm text-gray-600 font-medium">点击或拖拽 Excel 文件到此处</p>
+          <p v-if="!selectedFile" class="text-sm text-gray-600 font-medium">点击或拖拽 Excel 或 XMind 文件到此处</p>
           <div v-else class="text-center">
             <p class="text-sm text-black font-bold mb-1">{{ selectedFile.name }}</p>
             <p class="text-xs text-green-600">{{ (selectedFile.size / 1024).toFixed(1) }} KB</p>
           </div>
-          <p class="text-xs text-gray-400 mt-2">支持 .xlsx, .xls 格式</p>
+          <p class="text-xs text-gray-400 mt-2">支持 .xlsx, .xls, .xmind 格式</p>
         </div>
 
         <div class="bg-blue-50 p-4 rounded-xl flex items-start gap-3">
           <el-icon class="text-blue-600 mt-0.5"><InfoFilled /></el-icon>
           <div class="text-xs text-blue-700">
             <p class="font-bold mb-1">导入说明：</p>
-            <p>1. 系统将根据“所属模块”自动匹配现有模块。</p>
-            <p>2. 匹配失败的用例将归入“未分类”模块。</p>
+            <p>1. 系统将根据“所属模块”或 XMind 层级自动匹配/创建模块。</p>
+            <p>2. 合并标题及路径完全一致的用例，合并步骤与内容。</p>
           </div>
         </div>
 
@@ -497,8 +497,8 @@ function handleFileChange(event: Event) {
   const input = event.target as HTMLInputElement
   if (input.files && input.files.length > 0) {
     const file = input.files[0]
-    if (!file.name.match(/\.(xlsx|xls)$/)) {
-      ElMessage.warning('请选择 Excel 文件 (.xlsx, .xls)')
+    if (!file.name.match(/\.(xlsx|xls|xmind)$/)) {
+      ElMessage.warning('请选择 Excel 或 XMind 文件 (.xlsx, .xls, .xmind)')
       return
     }
     selectedFile.value = file
@@ -508,8 +508,8 @@ function handleFileChange(event: Event) {
 function handleDrop(event: DragEvent) {
   const file = event.dataTransfer?.files[0]
   if (file) {
-    if (!file.name.match(/\.(xlsx|xls)$/)) {
-      ElMessage.warning('请选择 Excel 文件 (.xlsx, .xls)')
+    if (!file.name.match(/\.(xlsx|xls|xmind)$/)) {
+      ElMessage.warning('请选择 Excel 或 XMind 文件 (.xlsx, .xls, .xmind)')
       return
     }
     selectedFile.value = file

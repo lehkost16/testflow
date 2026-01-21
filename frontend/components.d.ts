@@ -7,6 +7,7 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
+    AiModelSettings: typeof import('./src/components/settings/AiModelSettings.vue')['default']
     ConcurrencySettings: typeof import('./src/components/settings/ConcurrencySettings.vue')['default']
     DocumentViewerDialog: typeof import('./src/components/module/DocumentViewerDialog.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']

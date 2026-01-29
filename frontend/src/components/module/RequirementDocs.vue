@@ -72,7 +72,7 @@
               class="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors flex items-center gap-2"
             >
               <el-icon><View /></el-icon>
-              查看
+              查看需求文档
             </button>
             <button
               @click="generateRequirementPoints(doc)"

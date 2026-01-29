@@ -23,6 +23,7 @@ class RequirementAnalysisRequest(BaseModel):
     project_context: str = Field(default="", description="项目背景信息")
     agent_id: Optional[int] = Field(default=None, description="指定智能体ID")
     image_paths: Optional[List[str]] = Field(default=None, description="图片文件路径列表（用于多模态分析）")
+    target_test_categories: Optional[List[str]] = Field(default=None, description="目标测试分类（如：功能测试、性能测试等）")
 
 
 class TestPointGenerationRequest(BaseModel):
@@ -107,7 +108,8 @@ async def analyze_requirements(
             project_context=request.project_context,
             user_id=current_user.id,
             agent_id=agent_id,
-            image_paths=request.image_paths
+            image_paths=request.image_paths,
+            target_test_categories=request.target_test_categories
         )
         
         return AgentTaskResponse(
@@ -265,23 +267,23 @@ async def get_task_status(
     """获取异步任务状态"""
     from app.services.async_task_manager import task_manager
     
-    print(f"\n{'='*60}")
-    print(f"[查询任务状态] 开始查询")
-    print(f"[查询任务状态] task_id: {task_id}")
-    print(f"[查询任务状态] task_manager 实例 ID: {id(task_manager)}")
-    print(f"[查询任务状态] 当前所有任务: {list(task_manager._tasks.keys())}")
-    print(f"[查询任务状态] 任务数量: {len(task_manager._tasks)}")
-    print(f"{'='*60}\n")
+    # print(f"\n{'='*60}")
+    # print(f"[查询任务状态] 开始查询")
+    # print(f"[查询任务状态] task_id: {task_id}")
+    # print(f"[查询任务状态] task_manager 实例 ID: {id(task_manager)}")
+    # print(f"[查询任务状态] 当前所有任务: {list(task_manager._tasks.keys())}")
+    # print(f"[查询任务状态] 任务数量: {len(task_manager._tasks)}")
+    # print(f"{'='*60}\n")
     
     task_status = task_manager.get_task_status(task_id)
     if not task_status:
-        print(f"[查询任务状态] ❌ 任务不存在: {task_id}")
+        # print(f"[查询任务状态] ❌ 任务不存在: {task_id}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"任务不存在: {task_id}"
         )
     
-    print(f"[查询任务状态] ✅ 找到任务: {task_status}")
+    # print(f"[查询任务状态] ✅ 找到任务: {task_status}")
     return AsyncTaskStatusResponse(**task_status)
 
 
@@ -798,12 +800,12 @@ def get_agent_types() -> Any:
             {
                 "value": "test_case_designer",
                 "label": "测试用例设计智能体",
-                "description": "根据测试点生成完整测试用例"
+                "description": "基于测试点生成详细测试用例"
             },
             {
                 "value": "test_case_optimizer",
                 "label": "测试用例优化智能体",
-                "description": "基于评审反馈自动优化测试用例"
+                "description": "优化测试用例的质量和完整性"
             }
         ]
     }
@@ -816,19 +818,30 @@ def get_test_types(
     """获取测试类型列表（从系统设置加载启用的测试分类）"""
     from app.services.settings_service import SettingsService
     
-    # 从数据库获取启用的测试分类
-    categories = SettingsService.get_test_categories(db, active_only=True)
-    
-    test_types = [
-        {
-            "value": cat.code,
-            "label": cat.name,
-            "description": cat.description or ""
+    try:
+        categories = SettingsService.get_test_categories(db, active_only=True)
+        return {
+            "test_types": [
+                {
+                    "value": cat.code,
+                    "label": cat.name,
+                    "description": cat.description
+                } for cat in categories
+            ]
         }
-        for cat in categories
-    ]
-    
-    return {"test_types": test_types}
+    except Exception as e:
+        print(f"⚠️ 获取测试类型失败: {e}")
+        # 降级返回默认列表
+        return {
+            "test_types": [
+                {"value": "functional", "label": "功能测试"},
+                {"value": "performance", "label": "性能测试"},
+                {"value": "security", "label": "安全测试"},
+                {"value": "compatibility", "label": "兼容性测试"},
+                {"value": "usability", "label": "易用性测试"},
+                {"value": "reliability", "label": "可靠性测试"}
+            ]
+        }
 
 
 @router.get("/design-methods")
@@ -838,16 +851,28 @@ def get_design_methods(
     """获取测试设计方法列表（从系统设置加载启用的设计方法）"""
     from app.services.settings_service import SettingsService
     
-    # 从数据库获取启用的测试设计方法
-    methods = SettingsService.get_design_methods(db, active_only=True)
-    
-    design_methods = [
-        {
-            "value": m.code,
-            "label": m.name,
-            "description": m.description or ""
+    try:
+        methods = SettingsService.get_design_methods(db, active_only=True)
+        return {
+            "design_methods": [
+                {
+                    "value": method.code,
+                    "label": method.name,
+                    "description": method.description
+                } for method in methods
+            ]
         }
-        for m in methods
-    ]
-    
-    return {"design_methods": design_methods}
+    except Exception as e:
+        print(f"⚠️ 获取设计方法失败: {e}")
+        # 降级返回默认列表
+        return {
+            "design_methods": [
+                {"value": "equivalence_partitioning", "label": "等价类划分法"},
+                {"value": "boundary_value", "label": "边界值分析法"},
+                {"value": "decision_table", "label": "判定表法"},
+                {"value": "state_transition", "label": "状态迁移法"},
+                {"value": "use_case", "label": "用例分析法"},
+                {"value": "error_guessing", "label": "错误推测法"},
+                {"value": "scenario", "label": "场景法"}
+            ]
+        }

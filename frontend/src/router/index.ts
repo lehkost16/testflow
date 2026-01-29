@@ -47,6 +47,12 @@ const router = createRouter({
           meta: { title: '模块详情' }
         },
         {
+          path: '/projects/:projectId/archives/:archiveId',
+          name: 'ArchiveDetail',
+          component: () => import('@/views/archive/ArchiveDetail.vue'),
+          meta: { title: '归档详情' }
+        },
+        {
           path: '/users',
           name: 'Users',
           component: () => import('@/views/user/UserList.vue'),

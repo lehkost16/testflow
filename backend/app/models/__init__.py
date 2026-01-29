@@ -9,6 +9,7 @@ from app.models.requirement_image import RequirementImage
 from app.models.testcase import TestPoint, TestCase, TestCaseReview
 from app.models.ai_config import AIModel, Agent, TaskLog
 from app.models.settings import TestCategory, TestDesignMethod, SystemConfig
+from app.models.test_case_archive import ProjectArchive, ArchivedTestCase
 
 __all__ = [
     "User",
@@ -29,5 +30,7 @@ __all__ = [
     "TaskLog",
     "TestCategory",
     "TestDesignMethod",
-    "SystemConfig"
+    "SystemConfig",
+    "ProjectArchive",
+    "ArchivedTestCase"
 ]

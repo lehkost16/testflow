@@ -79,6 +79,13 @@
           :project-id="projectId"
           :can-edit="canEdit"
         />
+
+        <!-- 用例归档 -->
+        <ProjectArchives
+          v-if="activeTab === 'archives'"
+          :project-id="projectId"
+          :can-edit="canEdit"
+        />
       </div>
     </div>
   </div>
@@ -93,6 +100,7 @@ import ProjectOverview from '@/components/project/ProjectOverview.vue'
 import ModuleList from '@/components/project/ModuleList.vue'
 import MemberList from '@/components/project/MemberList.vue'
 import ProjectTestCases from '@/components/project/ProjectTestCases.vue'
+import ProjectArchives from '@/components/project/ProjectArchives.vue'
 import { useAuthStore } from '@/stores/auth'
 import { projectApi } from '@/api/project'
 
@@ -127,6 +135,8 @@ const tabs = computed(() => {
   }
   // 所有成员可见测试用例
   baseTabs.push({ key: 'test-cases', label: '测试用例', icon: List })
+  // 归档版本
+  baseTabs.push({ key: 'archives', label: '用例归档', icon: List })
   
   return baseTabs
 })
@@ -167,7 +177,7 @@ onMounted(() => {
 }
 
 .tab-content {
-  min-height: 400px;
+  min-height: 1000px;
 }
 
 /* 覆盖Element Plus的样式 */

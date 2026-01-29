@@ -48,7 +48,7 @@ class RequirementFile(Base):
     project: Mapped["Project"] = relationship("Project", back_populates="requirement_files")
     module: Mapped[Optional["Module"]] = relationship("Module", back_populates="requirement_files")
     uploader: Mapped["User"] = relationship("User")
-    requirement_points: Mapped[List["RequirementPoint"]] = relationship("RequirementPoint", back_populates="requirement_file")
+    requirement_points: Mapped[List["RequirementPoint"]] = relationship("RequirementPoint", back_populates="requirement_file", cascade="all, delete-orphan")
     images: Mapped[List["RequirementImage"]] = relationship("RequirementImage", back_populates="requirement_file", cascade="all, delete-orphan")
     
     def __repr__(self) -> str:

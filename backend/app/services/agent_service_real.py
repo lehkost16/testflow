@@ -348,11 +348,13 @@ class AgentServiceReal:
 
     # ==================== 核心方法 ====================
     
-    async def analyze_requirements(self, agent_id: int, content: str, image_paths: Optional[List[str]] = None) -> Dict[str, Any]:
+    async def analyze_requirements(self, agent_id: int, content: str, image_paths: Optional[List[str]] = None, target_test_categories: Optional[List[str]] = None) -> Dict[str, Any]:
         """分析需求"""
         config = await self._get_agent_config(agent_id)
-        user_prompt = render_prompt(REQUIREMENT_ANALYSIS_USER, content=content)
+        categories_str = ", ".join(target_test_categories) if target_test_categories else "所有类别"
+        user_prompt = render_prompt(REQUIREMENT_ANALYSIS_USER, content=content, test_categories=categories_str)
         return await self._call_ai_with_parse(config, user_prompt, image_paths)
+
     
     async def generate_test_points(self, agent_id: int, requirement_content: str) -> Dict[str, Any]:
         """生成测试点"""
@@ -472,7 +474,8 @@ class AgentServiceReal:
         project_context: str = "",
         user_id: int = 1,
         agent_id: Optional[int] = None,
-        image_paths: Optional[List[str]] = None
+        image_paths: Optional[List[str]] = None,
+        target_test_categories: Optional[List[str]] = None
     ) -> Dict[str, Any]:
         """执行需求分析（同步模式）
         
@@ -482,6 +485,7 @@ class AgentServiceReal:
             user_id: 用户ID
             agent_id: 智能体ID
             image_paths: 图片路径列表
+            target_test_categories: 目标测试分类列表
             
         Returns:
             包含 success, data, error 的字典
@@ -497,7 +501,8 @@ class AgentServiceReal:
             result = await self.analyze_requirements(
                 agent_id=agent_id,
                 content=requirement_content,
-                image_paths=image_paths
+                image_paths=image_paths,
+                target_test_categories=target_test_categories
             )
             
             return {

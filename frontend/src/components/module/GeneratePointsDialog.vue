@@ -112,6 +112,30 @@
           <span>包含图片分析，处理时间可能较长，请耐心等待</span>
         </div>
       </div>
+      
+      <!-- 测试分类选择 -->
+      <div class="mb-4">
+        <label class="block text-sm font-bold text-gray-700 mb-2">关注的测试类别</label>
+        <el-select
+          v-model="targetCategories"
+          multiple
+          placeholder="请选择关注的测试类别（默认全选）"
+          class="w-full"
+          :loading="loadingCategories"
+          collapse-tags
+          collapse-tags-tooltip
+        >
+          <el-option
+            v-for="item in availableCategories"
+            :key="item.code"
+            :label="item.name"
+            :value="item.name"
+          />
+        </el-select>
+        <div class="text-xs text-gray-400 mt-1">
+          指定后，AI将重点分析与选中类别相关的需求（留空则分析所有类别）
+        </div>
+      </div>
     </div>
 
     <template #footer>
@@ -146,6 +170,7 @@
 import { ref, computed, watch } from 'vue'
 import { Loading, CircleCheck, CircleClose, MagicStick, InfoFilled, Picture, Warning } from '@element-plus/icons-vue'
 import { agentApi } from '@/api/agent'
+import { settingsApi } from '@/api/settings'
 
 interface RequirementImage {
   id: number
@@ -210,13 +235,18 @@ const generatedPoints = ref<GeneratedPoint[]>([])
 const multimodalUsed = ref(false)  // 是否使用了多模态分析
 const modelSupportsMultimodal = ref(true)  // 模型是否支持多模态
 
+// 测试分类相关
+const availableCategories = ref<any[]>([])
+const targetCategories = ref<string[]>([])
+const loadingCategories = ref(false)
+
 // 计算属性
 const contentLength = computed(() => props.documentContent?.length || 0)
 
 // 检测文档是否包含图片
 const hasImages = computed(() => {
   return (props.document?.has_images && (props.document?.image_count || 0) > 0) ||
-         (props.documentImages && props.documentImages.length > 0)
+         (props.documentImages && props.documentImages?.length > 0)
 })
 
 // 图片数量
@@ -231,6 +261,19 @@ const imagePaths = computed(() => {
   }
   return []
 })
+
+// 加载测试分类
+const loadCategories = async () => {
+    loadingCategories.value = true
+    try {
+        const res = await settingsApi.getTestCategories(true) // 只获取启用的分类
+        availableCategories.value = res
+    } catch (e) {
+        console.error('加载测试分类失败', e)
+    } finally {
+        loadingCategories.value = false
+    }
+}
 
 // 开始生成
 const startGeneration = async () => {
@@ -289,7 +332,8 @@ const startGeneration = async () => {
     // 构建请求参数
     const requestParams: any = {
       requirement_content: props.documentContent,
-      project_context: `项目ID: ${props.projectId}, 模块ID: ${props.moduleId}`
+      project_context: `项目ID: ${props.projectId}, 模块ID: ${props.moduleId}`,
+      target_test_categories: targetCategories.value.length > 0 ? targetCategories.value : undefined
     }
     
     // 如果有图片，添加图片路径
@@ -357,12 +401,16 @@ const resetState = () => {
   generatedPoints.value = []
   multimodalUsed.value = false
   modelSupportsMultimodal.value = true
+  targetCategories.value = [] // Reset selection
 }
 
 // 监听对话框关闭时重置状态
 watch(() => props.visible, (newVal) => {
   if (!newVal) {
     resetState()
+  } else {
+    // 打开时加载分类
+    loadCategories()
   }
 })
 </script>

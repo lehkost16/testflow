@@ -138,11 +138,13 @@ class TestCase(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
     # 关系
+    project: Mapped["Project"] = relationship("Project", back_populates="test_cases")
     module: Mapped[Optional["Module"]] = relationship("Module", back_populates="test_cases")
     test_point: Mapped[Optional["TestPoint"]] = relationship("TestPoint", back_populates="test_cases")
     creator: Mapped["User"] = relationship("User", foreign_keys=[created_by])
     updater: Mapped[Optional["User"]] = relationship("User", foreign_keys=[updated_by])
-    reviews: Mapped[List["TestCaseReview"]] = relationship("TestCaseReview", back_populates="test_case")
+    reviews: Mapped[List["TestCaseReview"]] = relationship("TestCaseReview", back_populates="test_case", cascade="all, delete-orphan")
+    executions: Mapped[List["TestCaseExecution"]] = relationship("TestCaseExecution", back_populates="test_case", cascade="all, delete-orphan")
     
     def __repr__(self) -> str:
         return f"TestCase(id={self.id!r}, title={self.title!r}, status={self.status!r})"
@@ -198,7 +200,7 @@ class TestCaseExecution(Base):
     executed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     
     # 关系
-    test_case: Mapped["TestCase"] = relationship("TestCase")
+    test_case: Mapped["TestCase"] = relationship("TestCase", back_populates="executions")
     executor: Mapped["User"] = relationship("User")
     
     def __repr__(self) -> str:

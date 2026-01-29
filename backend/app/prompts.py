@@ -102,6 +102,7 @@ REQUIREMENT_SPLITTER_SYSTEM = """
       "content": "需求点的完整描述，保持原文准确性",
       "module": "所属功能模块名称",
       "priority": "high/medium/low",
+      "category": "functional/performance/security/compatibility/...",
       "order_index": 1
     }
   ]
@@ -110,6 +111,8 @@ REQUIREMENT_SPLITTER_SYSTEM = """
 注意：
 - content: 需求点描述，必须清晰、具体、可测试
 - module: 功能模块名称，用于分组管理
+- priority: 优先级
+- category: 测试分类（如 functional, performance, security 等），默认为 functional
 - order_index: 需求点的顺序编号，从1开始
 </output_format>"""
 
@@ -119,6 +122,11 @@ REQUIREMENT_ANALYSIS_USER = """
 以下是需要分析的需求文档内容：
 
 {{content}}
+
+【关注的测试类别】
+{{test_categories}}
+如果是 "所有类别" 或空，则提取所有类型的需求。
+如果指定了特定类别（如"性能测试"），请重点识别和提取相关需求。
 </context>
 
 <task>
@@ -128,7 +136,8 @@ REQUIREMENT_ANALYSIS_USER = """
 1. 识别所有功能需求和非功能需求
 2. 按功能模块进行分组
 3. 评估每个需求点的优先级
-4. 确保需求点的独立性和完整性
+4. 识别每个需求点的测试类别（category）
+5. 确保需求点的独立性和完整性
 </task>
 
 <final_instruction>
@@ -136,8 +145,9 @@ REQUIREMENT_ANALYSIS_USER = """
 1. 我是否提取了所有关键需求点，没有遗漏？
 2. 每个需求点是否独立、原子、可测试？
 3. 优先级划分是否合理，符合业务价值？
-4. 输出格式是否严格符合JSON规范？
-5. 是否保持了原文的准确性，没有添加臆测内容？
+4. 是否正确识别了测试类别（category）？
+5. 输出格式是否严格符合JSON规范？
+6. 是否保持了原文的准确性，没有添加臆测内容？
 
 现在请输出JSON格式的需求点列表。
 </final_instruction>

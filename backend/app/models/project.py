@@ -25,9 +25,10 @@ class Project(Base):
     
     # 关系
     owner: Mapped["User"] = relationship("User", back_populates="owned_projects")
-    members: Mapped[List["ProjectMember"]] = relationship("ProjectMember", back_populates="project")
+    members: Mapped[List["ProjectMember"]] = relationship("ProjectMember", back_populates="project", cascade="all, delete-orphan")
     modules: Mapped[List["Module"]] = relationship("Module", back_populates="project", cascade="all, delete-orphan")
-    requirement_files: Mapped[List["RequirementFile"]] = relationship("RequirementFile", back_populates="project")
+    requirement_files: Mapped[List["RequirementFile"]] = relationship("RequirementFile", back_populates="project", cascade="all, delete-orphan")
+    test_cases: Mapped[List["TestCase"]] = relationship("TestCase", cascade="all, delete-orphan")
     
     def __repr__(self) -> str:
         return f"Project(id={self.id!r}, name={self.name!r}, owner_id={self.owner_id!r})"

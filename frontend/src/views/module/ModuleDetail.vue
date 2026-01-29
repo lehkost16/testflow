@@ -249,7 +249,7 @@ onMounted(() => {
 }
 
 .tab-content {
-  min-height: 400px;
+  min-height: 1000px;
 }
 </style>
 

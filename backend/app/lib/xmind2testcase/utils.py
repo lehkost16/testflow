@@ -23,7 +23,7 @@ def get_absolute_path(path):
     return os.path.join(fp, fn)
 
 
-def get_xmind_testsuites(xmind_file):
+def get_xmind_testsuites(xmind_file):22
     """Load the XMind file and parse to `xmind2testcase.metadata.TestSuite` list"""
     xmind_file = get_absolute_path(xmind_file)
     '''
@@ -147,3 +147,5 @@ def xmind_testcase_to_json_file(xmind_file):
         logging.info('Convert XMind file(%s) to a testcase json file(%s) successfully!', xmind_file, testcase_json_file)
 
     return testcase_json_file
+
+

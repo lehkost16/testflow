@@ -8,6 +8,7 @@ export interface RequirementAnalysisRequest {
   project_context?: string
   agent_id?: number
   image_paths?: string[]  // 图片文件路径列表（用于多模态分析）
+  target_test_categories?: string[] // 目标测试分类
 }
 
 export interface TestPointGenerationRequest {

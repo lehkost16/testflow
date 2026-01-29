@@ -113,7 +113,8 @@ from app.api import (
     system,
     test_data,
     settings,
-    project_test_cases
+    project_test_cases,
+    project_archives
 )
 
 app.include_router(auth.router, prefix="/api/auth", tags=["认证"])
@@ -121,6 +122,7 @@ app.include_router(projects.router, prefix="/api/projects", tags=["项目管理"
 app.include_router(modules.router, prefix="/api/projects", tags=["模块管理"])
 app.include_router(requirements.router, prefix="/api/projects", tags=["需求管理"])
 app.include_router(project_test_cases.router, prefix="/api", tags=["项目测试用例"])
+app.include_router(project_archives.router, prefix="/api", tags=["用例归档"])
 app.include_router(test_data.router, prefix="/api", tags=["测试数据管理"])
 app.include_router(system.router, prefix="/api/system", tags=["系统管理"])
 app.include_router(ai_models.router, prefix="/api/ai", tags=["AI模型管理"])
